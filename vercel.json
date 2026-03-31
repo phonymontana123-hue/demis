@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "functions": {
+    "src/api/chat.js": { "maxDuration": 60 },
+    "src/api/task.js": { "maxDuration": 60 }
+  },
+  "routes": [
+    { "src": "/api/chat",      "dest": "/src/api/chat.js" },
+    { "src": "/api/task/(.*)", "dest": "/src/api/task.js" },
+    { "src": "/api/task",      "dest": "/src/api/task.js" },
+    { "src": "/(.*)",          "dest": "/public/$1"       }
+  ],
+  "env": {
+    "GITHUB_TOKEN":       "@github-token",
+    "GITHUB_OWNER":       "@github-owner",
+    "GITHUB_REPO":        "@github-repo",
+    "SESSION_TOKEN":      "@session-token",
+    "ANTHROPIC_API_KEY":  "@anthropic-api-key",
+    "DEMIS_VERCEL_TOKEN": "@demis-vercel-token",
+    "PUSHOVER_TOKEN":     "@pushover-token",
+    "PUSHOVER_USER":      "@pushover-user"
+  }
+}
