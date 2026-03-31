@@ -9,15 +9,5 @@
     { "src": "/api/task/(.*)", "dest": "/src/api/task.js" },
     { "src": "/api/task",      "dest": "/src/api/task.js" },
     { "src": "/(.*)",          "dest": "/public/$1"       }
-  ],
-  "env": {
-    "GITHUB_TOKEN":       "@github-token",
-    "GITHUB_OWNER":       "@github-owner",
-    "GITHUB_REPO":        "@github-repo",
-    "SESSION_TOKEN":      "@session-token",
-    "ANTHROPIC_API_KEY":  "@anthropic-api-key",
-    "DEMIS_VERCEL_TOKEN": "@demis-vercel-token",
-    "PUSHOVER_TOKEN":     "@pushover-token",
-    "PUSHOVER_USER":      "@pushover-user"
-  }
+  ]
 }
