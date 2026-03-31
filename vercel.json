@@ -1,13 +1,13 @@
 {
   "version": 2,
   "functions": {
-    "src/api/chat.js": { "maxDuration": 60 },
-    "src/api/task.js": { "maxDuration": 60 }
+    "api/chat.js": { "maxDuration": 60 },
+    "api/task.js": { "maxDuration": 60 }
   },
   "routes": [
-    { "src": "/api/chat",      "dest": "/src/api/chat.js" },
-    { "src": "/api/task/(.*)", "dest": "/src/api/task.js" },
-    { "src": "/api/task",      "dest": "/src/api/task.js" },
-    { "src": "/(.*)",          "dest": "/public/$1"       }
+    { "src": "/api/chat",      "dest": "/api/chat.js" },
+    { "src": "/api/task/(.*)", "dest": "/api/task.js" },
+    { "src": "/api/task",      "dest": "/api/task.js" },
+    { "src": "/(.*)",          "dest": "/public/$1"   }
   ]
 }

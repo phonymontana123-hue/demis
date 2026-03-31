@@ -48,10 +48,10 @@ function assert(cond, msg) {
 
 function section(name) { console.log(`\n=== ${name} ===`); }
 
-const identity = require(path.join(__dirname, '../src/api/_identity.js'))
-const utils    = require(path.join(__dirname, '../src/api/_utils.js'))
-const memory   = require(path.join(__dirname, '../src/api/_memory.js'))
-const state    = require(path.join(__dirname, '../src/api/_state.js'))
+const identity = require(path.join(__dirname, '../api/_identity.js'))
+const utils    = require(path.join(__dirname, '../api/_utils.js'))
+const memory   = require(path.join(__dirname, '../api/_memory.js'))
+const state    = require(path.join(__dirname, '../api/_state.js'))
 
 section('IDENTITY');
 
@@ -119,7 +119,7 @@ test('verifySession accepts correct token via cookie', () => {
   utils.verifySession({ headers: {}, cookies: { session: 'cookie-secret' } });
 });
 test('verifySession uses timingSafeEqual', () => {
-  const src = require('fs').readFileSync(path.join(__dirname, '../src/api/_utils.js'), 'utf8');
+  const src = require('fs').readFileSync(path.join(__dirname, '../api/_utils.js'), 'utf8');
   assert(src.includes('timingSafeEqual'));
   assert(!src.includes('token !== process.env.SESSION_TOKEN'));
 });
@@ -326,13 +326,13 @@ test('readFile: no content field → throws', () => {
   catch(e) { assert(e.message.includes('no content field')); }
 });
 test('_github exports all required functions', () => {
-  const gh = require(path.join(__dirname, '../src/api/_github.js'));
+  const gh = require(path.join(__dirname, '../api/_github.js'));
   for (const fn of ['readFile','branchExists','createBranch','writeFile','openPR','mergePR']) {
     assert(typeof gh[fn] === 'function', `missing: ${fn}`);
   }
 });
 test('_github reads env vars inside ghFetch, not at module load', () => {
-  const src = require('fs').readFileSync(path.join(__dirname, '../src/api/_github.js'), 'utf8');
+  const src = require('fs').readFileSync(path.join(__dirname, '../api/_github.js'), 'utf8');
   const firstFnPos = src.indexOf('async function ghFetch');
   const moduleLevel = src.slice(0, firstFnPos);
   assert(!moduleLevel.includes('process.env.GITHUB_OWNER'));
@@ -342,31 +342,31 @@ test('_github reads env vars inside ghFetch, not at module load', () => {
 section('PLANNER');
 
 test('selectPlannerModel: deploy to production → Haiku', () => {
-  const { selectPlannerModel } = require(path.join(__dirname, '../src/api/_planner.js'));
+  const { selectPlannerModel } = require(path.join(__dirname, '../api/_planner.js'));
   assert(selectPlannerModel('deploy to production') === 'claude-haiku-4-5-20251001');
 });
 test('selectPlannerModel: folatac → Sonnet', () => {
-  const { selectPlannerModel } = require(path.join(__dirname, '../src/api/_planner.js'));
+  const { selectPlannerModel } = require(path.join(__dirname, '../api/_planner.js'));
   assert(selectPlannerModel('update folatac dashboard') === 'claude-sonnet-4-6');
 });
 test('selectPlannerModel: long instruction → Sonnet', () => {
-  const { selectPlannerModel } = require(path.join(__dirname, '../src/api/_planner.js'));
+  const { selectPlannerModel } = require(path.join(__dirname, '../api/_planner.js'));
   assert(selectPlannerModel('x'.repeat(201)) === 'claude-sonnet-4-6');
 });
 test('validatePlan: missing taskLabel → error', () => {
-  const { validatePlan } = require(path.join(__dirname, '../src/api/_planner.js'));
+  const { validatePlan } = require(path.join(__dirname, '../api/_planner.js'));
   assert(validatePlan({ steps:[{label:'s',fn:'compute',args:{}}], canExecute:true }).some(e => e.includes('taskLabel')));
 });
 test('validatePlan: vercel_wait_for_deploy (old name) → error', () => {
-  const { validatePlan } = require(path.join(__dirname, '../src/api/_planner.js'));
+  const { validatePlan } = require(path.join(__dirname, '../api/_planner.js'));
   assert(validatePlan({ taskLabel:'t', steps:[{label:'x',fn:'vercel_wait_for_deploy',args:{}}], canExecute:true }).some(e => e.includes('vercel_wait_for_deploy')));
 });
 test('validatePlan: vercel_check_deploy → passes', () => {
-  const { validatePlan } = require(path.join(__dirname, '../src/api/_planner.js'));
+  const { validatePlan } = require(path.join(__dirname, '../api/_planner.js'));
   assert(validatePlan({ taskLabel:'t', steps:[{label:'x',fn:'vercel_check_deploy',args:{}}], canExecute:true }).filter(e => e.includes('unknown')).length === 0);
 });
 test('makePlannerSystem call is inside plan()', () => {
-  const src = require('fs').readFileSync(path.join(__dirname, '../src/api/_planner.js'), 'utf8');
+  const src = require('fs').readFileSync(path.join(__dirname, '../api/_planner.js'), 'utf8');
   const planPos = src.indexOf('async function plan(');
   const callPos = src.indexOf('= makePlannerSystem()');
   assert(callPos > planPos, 'call must be inside plan()');
@@ -375,7 +375,7 @@ test('makePlannerSystem call is inside plan()', () => {
 section('EXECUTOR');
 
 const { COMPUTE_REGISTRY, STEP_REGISTRY, createTask: execCreateTask } =
-  require(path.join(__dirname, '../src/api/_executor.js'));
+  require(path.join(__dirname, '../api/_executor.js'));
 
 test('apply_routing_patch: handles SONNET_KW', () => {
   const content = `const SONNET_KW = ['plan','write'];\nconst complex = (last || '').length > 120;`;
@@ -428,7 +428,7 @@ test('summarize: PR preserves url and number', () => {
   assert(r.url && r.pr === 47);
 });
 test('vercel_check_deploy uses stateMap', () => {
-  const src = require('fs').readFileSync(path.join(__dirname, '../src/api/_executor.js'), 'utf8');
+  const src = require('fs').readFileSync(path.join(__dirname, '../api/_executor.js'), 'utf8');
   assert(src.includes('stateMap') && src.includes('BUILDING:'));
 });
 
@@ -469,8 +469,8 @@ testAsync('createTask: throws on out-of-range index', async () => {
 
 section('CHAT & TASK (source checks)');
 
-const chatSrc = require('fs').readFileSync(path.join(__dirname, '../src/api/chat.js'), 'utf8');
-const taskSrc = require('fs').readFileSync(path.join(__dirname, '../src/api/task.js'), 'utf8');
+const chatSrc = require('fs').readFileSync(path.join(__dirname, '../api/chat.js'), 'utf8');
+const taskSrc = require('fs').readFileSync(path.join(__dirname, '../api/task.js'), 'utf8');
 
 test('concurrent guard covers pending AND running', () => {
   assert(chatSrc.includes('isTaskActive') && chatSrc.includes("'pending'") && chatSrc.includes("'running'"));
@@ -510,20 +510,12 @@ section('VERCEL CONFIG');
 
 const vJson = JSON.parse(require('fs').readFileSync(path.join(__dirname, '../vercel.json'), 'utf8'));
 
-test('no VERCEL_PROJECT_ID in env', () => {
-  assert(!vJson.env.VERCEL_PROJECT_ID);
-});
-test('uses DEMIS_VERCEL_TOKEN not VERCEL_TOKEN', () => {
-  assert(!vJson.env.VERCEL_TOKEN && vJson.env.DEMIS_VERCEL_TOKEN);
-});
-test('all required secrets present', () => {
-  const required = ['GITHUB_TOKEN','GITHUB_OWNER','GITHUB_REPO','SESSION_TOKEN',
-    'ANTHROPIC_API_KEY','DEMIS_VERCEL_TOKEN','PUSHOVER_TOKEN','PUSHOVER_USER'];
-  for (const k of required) assert(vJson.env[k], `missing: ${k}`);
+test('no env block in vercel.json (env vars set via CLI)', () => {
+  assert(!vJson.env, 'env block should be removed — env vars are set via vercel env add');
 });
 test('function maxDuration 60 for both handlers', () => {
-  assert(vJson.functions['src/api/chat.js']?.maxDuration === 60);
-  assert(vJson.functions['src/api/task.js']?.maxDuration === 60);
+  assert(vJson.functions['api/chat.js']?.maxDuration === 60);
+  assert(vJson.functions['api/task.js']?.maxDuration === 60);
 });
 
 section('CROSS-MODULE INVARIANTS');
@@ -534,22 +526,22 @@ test('CI-1: chat.js uses executor.createTask not state.createTask', () => {
 test('CI-2: no module other than _github.js reads GITHUB_TOKEN', () => {
   const files = ['_utils.js','_memory.js','_state.js','_planner.js','_executor.js','chat.js','task.js'];
   for (const f of files) {
-    const src = require('fs').readFileSync(path.join(__dirname, `../src/api/${f}`), 'utf8');
+    const src = require('fs').readFileSync(path.join(__dirname, `../api/${f}`), 'utf8');
     assert(!src.includes('GITHUB_TOKEN'), `${f} must not read GITHUB_TOKEN`);
   }
 });
 test('CI-5: result persisted before step_done sent', () => {
-  const execSrc = require('fs').readFileSync(path.join(__dirname, '../src/api/_executor.js'), 'utf8');
+  const execSrc = require('fs').readFileSync(path.join(__dirname, '../api/_executor.js'), 'utf8');
   const updatePos = execSrc.indexOf("status:  'done'");
   const sendPos   = execSrc.indexOf("type: 'step_done'");
   assert(updatePos < sendPos && updatePos > 0, `updatePos:${updatePos} sendPos:${sendPos}`);
 });
 test('CI-7: write rejects null/undefined but not empty string', () => {
-  const execSrc = require('fs').readFileSync(path.join(__dirname, '../src/api/_executor.js'), 'utf8');
+  const execSrc = require('fs').readFileSync(path.join(__dirname, '../api/_executor.js'), 'utf8');
   assert(execSrc.includes('content === null || content === undefined'));
 });
 test('CI-8: SONNET_TRIGGERS checked before TOOL_PATTERNS', () => {
-  const src = require('fs').readFileSync(path.join(__dirname, '../src/api/_utils.js'), 'utf8');
+  const src = require('fs').readFileSync(path.join(__dirname, '../api/_utils.js'), 'utf8');
   assert(src.indexOf('SONNET_TRIGGERS.some') < src.indexOf('TOOL_PATTERNS.some'));
 });
 
