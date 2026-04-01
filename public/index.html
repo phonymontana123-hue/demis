@@ -125,14 +125,18 @@ body{
   font-size:14px;line-height:1.6;
   position:relative;
 }
+/* Speaker button — always visible, red icon */
 .msg.assistant .speaker-btn{
-  position:absolute;top:8px;right:8px;
-  background:none;border:none;color:var(--fg3);cursor:pointer;font-size:14px;
-  opacity:0;transition:opacity .15s;padding:4px;border-radius:4px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:none;border:none;cursor:pointer;
+  color:var(--red);
+  padding:6px;border-radius:6px;
+  margin-top:8px;
+  transition:background .15s,opacity .15s;
+  opacity:0.8;
 }
-.msg.assistant:hover .speaker-btn{opacity:1}
-.msg.assistant .speaker-btn:hover{color:var(--red)}
-.msg.assistant .speaker-btn.playing{opacity:1;color:var(--red)}
+.msg.assistant .speaker-btn:hover{background:var(--bg3);opacity:1}
+.msg.assistant .speaker-btn.playing{opacity:1;background:var(--red-glow)}
 .msg.system{
   align-self:center;
   font-size:12px;color:var(--fg3);font-style:italic;
@@ -171,7 +175,7 @@ body{
 .input-area{
   padding:12px 16px;padding-bottom:calc(12px + var(--safe-b));
   border-top:1px solid var(--bg3);flex-shrink:0;
-  display:flex;align-items:flex-end;gap:8px;
+  display:flex;align-items:flex-end;gap:10px;
   background:var(--bg);
 }
 .input-wrap{
@@ -188,19 +192,36 @@ body{
   max-height:120px;line-height:1.4;
 }
 .input-wrap textarea::placeholder{color:var(--fg3)}
-.send-btn,.mic-btn{
-  width:38px;height:38px;border:none;border-radius:var(--radius-sm);
+.send-btn{
+  width:42px;height:42px;border:none;border-radius:var(--radius-sm);
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex-shrink:0;transition:background .15s,transform .1s;font-size:16px;
+  cursor:pointer;flex-shrink:0;transition:background .15s,transform .1s;
+  background:var(--red);color:#fff;
 }
-.send-btn{background:var(--red);color:#fff}
 .send-btn:hover{background:var(--red-dim)}
 .send-btn:active{transform:scale(.95)}
 .send-btn:disabled{opacity:.4;cursor:default;transform:none}
-.mic-btn{background:var(--bg2);color:var(--fg2);border:1px solid var(--bg4)}
-.mic-btn:hover{background:var(--bg3)}
-.mic-btn.recording{background:var(--red);color:#fff;animation:pulse 1.5s infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--red-glow)}50%{box-shadow:0 0 0 10px transparent}}
+
+/* Mic button — large prominent red circle */
+.mic-btn{
+  width:48px;height:48px;border:none;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;
+  background:var(--red);color:#fff;
+  transition:background .15s,transform .1s,box-shadow .2s;
+  box-shadow:0 2px 8px var(--red-glow);
+}
+.mic-btn:hover{background:var(--red-dim);transform:scale(1.05)}
+.mic-btn:active{transform:scale(.95)}
+.mic-btn.recording{
+  background:var(--red);color:#fff;
+  animation:micPulse 1.5s ease-in-out infinite;
+  box-shadow:0 0 0 0 var(--red-glow);
+}
+@keyframes micPulse{
+  0%,100%{box-shadow:0 0 0 0 var(--red-glow)}
+  50%{box-shadow:0 0 0 14px rgba(224,9,20,0)}
+}
 
 /* ── WELCOME ── */
 .welcome{
@@ -264,7 +285,12 @@ body{
       <textarea id="input" rows="1" placeholder="Message DEMIS..." onkeydown="handleKey(event)" oninput="autoGrow(this)"></textarea>
     </div>
     <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Voice input">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="1" width="6" height="12" rx="3"/>
+        <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
     </button>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled title="Send">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
@@ -278,6 +304,10 @@ const SESSION_TOKEN = 'd1facb3daddf0b3621adfb1906612911b4e2473b229b5a659056d1b68
 const ELEVENLABS_KEY = '86eb5abbafba6d1d0ef1c87250678af5484dd5b89fb916b844ce720c4828367b';
 const ELEVENLABS_VOICE = 'uju3wxzG5OhpWcoi3SMy';
 const WAKE_WORD = 'hey demis';
+
+// SVG icons as strings
+const SPEAKER_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
+const SPEAKER_PLAYING_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
 
 // ── STATE ──
 let conversations = JSON.parse(localStorage.getItem('demis_convos') || '{}');
@@ -373,6 +403,11 @@ function persistCurrentConvo() {
   saveConversations();
 }
 
+// ── SPEAKER BUTTON HTML ──
+function speakerBtnHtml(msgIndex) {
+  return `<div style="margin-top:8px"><button class="speaker-btn" data-msg="${msgIndex}" onclick="speak(${msgIndex})" title="Read aloud">${SPEAKER_SVG}</button></div>`;
+}
+
 // ── RENDER ──
 function renderMessages() {
   const welcome = currentMessages.length === 0;
@@ -380,7 +415,7 @@ function renderMessages() {
     ? `<div class="welcome"><h1>DEMIS</h1><p>Your personal AI agent. Type a message or tap the mic and say "Hey DEMIS" to begin.</p></div>`
     : currentMessages.map((m, i) => {
         if (m.role === 'user') return `<div class="msg user">${esc(m.content)}</div>`;
-        if (m.role === 'assistant') return `<div class="msg assistant">${formatMd(m.content)}<button class="speaker-btn" onclick="speak(${i})" title="Read aloud">&#128264;</button></div>`;
+        if (m.role === 'assistant') return `<div class="msg assistant">${formatMd(m.content)}${speakerBtnHtml(i)}</div>`;
         return `<div class="msg system">${esc(m.content)}</div>`;
       }).join('');
   scrollBottom();
@@ -445,6 +480,8 @@ async function sendMessage(text) {
 
   const apiMessages = currentMessages.map(m => ({ role: m.role, content: m.content }));
   let fullText = '';
+  // The assistant message index will be currentMessages.length after we push it
+  const asstMsgIndex = currentMessages.length;
 
   try {
     const resp = await fetch('/api/chat', {
@@ -485,8 +522,7 @@ async function sendMessage(text) {
           const evt = JSON.parse(data);
           if (evt.type === 'text') {
             fullText += evt.text;
-            asstEl.innerHTML = formatMd(fullText) +
-              `<button class="speaker-btn" onclick="speak(${currentMessages.length})" title="Read aloud">&#128264;</button>`;
+            asstEl.innerHTML = formatMd(fullText) + speakerBtnHtml(asstMsgIndex);
             scrollBottom();
           } else if (evt.type === 'planning') {
             $status.textContent = 'Planning...';
@@ -494,10 +530,10 @@ async function sendMessage(text) {
             $status.textContent = `Running: ${evt.label}`;
           } else if (evt.type === 'task_blocked') {
             fullText += `\n[Task blocked: ${evt.reason}]`;
-            asstEl.innerHTML = formatMd(fullText);
+            asstEl.innerHTML = formatMd(fullText) + speakerBtnHtml(asstMsgIndex);
           } else if (evt.type === 'memory_set' || evt.type === 'memory_cleared') {
             fullText += `[Memory updated]`;
-            asstEl.innerHTML = formatMd(fullText);
+            asstEl.innerHTML = formatMd(fullText) + speakerBtnHtml(asstMsgIndex);
           }
         } catch (_) {}
       }
@@ -520,56 +556,91 @@ async function sendMessage(text) {
 
 // ── TEXT-TO-SPEECH ──
 async function speak(msgIndex) {
+  console.log('[TTS] speak() called for message index:', msgIndex);
   const msg = currentMessages[msgIndex];
-  if (!msg || msg.role !== 'assistant') return;
+  if (!msg || msg.role !== 'assistant') {
+    console.warn('[TTS] No assistant message at index', msgIndex, '— currentMessages.length:', currentMessages.length);
+    return;
+  }
 
   // Stop any current playback
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   window.speechSynthesis?.cancel();
 
-  // Update button state
-  document.querySelectorAll('.speaker-btn').forEach(b => b.classList.remove('playing'));
-  const btns = document.querySelectorAll('.msg.assistant .speaker-btn');
-  const userMsgCount = currentMessages.slice(0, msgIndex).filter(m => m.role === 'user').length;
-  const asstIndex = msgIndex - userMsgCount - currentMessages.slice(0, msgIndex).filter(m => m.role === 'system').length;
+  // Reset all speaker button states
+  document.querySelectorAll('.speaker-btn').forEach(b => {
+    b.classList.remove('playing');
+    b.innerHTML = SPEAKER_SVG;
+  });
 
   const text = msg.content.replace(/```[\s\S]*?```/g, '').replace(/`[^`]+`/g, '').trim();
-  if (!text) return;
+  if (!text) { console.warn('[TTS] Empty text after stripping code'); return; }
+  console.log('[TTS] Text to speak (first 100 chars):', text.slice(0, 100));
+
+  // Find the speaker button for this message
+  const btn = document.querySelector(`.speaker-btn[data-msg="${msgIndex}"]`);
 
   // Try ElevenLabs first
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE}`;
+  console.log('[TTS] Calling ElevenLabs:', url);
   try {
-    const resp = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE}/stream`, {
+    const resp = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'xi-api-key': ELEVENLABS_KEY },
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': ELEVENLABS_KEY,
+      },
       body: JSON.stringify({
         text: text.slice(0, 2500),
-        model_id: 'eleven_turbo_v2_5',
+        model_id: 'eleven_multilingual_v2',
         voice_settings: { stability: 0.5, similarity_boost: 0.75 },
       }),
     });
-    if (!resp.ok) throw new Error('ElevenLabs failed');
+    console.log('[TTS] ElevenLabs response status:', resp.status);
+    if (!resp.ok) {
+      const errBody = await resp.text();
+      console.error('[TTS] ElevenLabs error body:', errBody);
+      throw new Error(`ElevenLabs HTTP ${resp.status}: ${errBody}`);
+    }
     const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    currentAudio = new Audio(url);
-    currentAudio.onended = () => {
-      URL.revokeObjectURL(url);
-      currentAudio = null;
-      document.querySelectorAll('.speaker-btn').forEach(b => b.classList.remove('playing'));
-    };
+    console.log('[TTS] ElevenLabs audio blob size:', blob.size);
+    const audioUrl = URL.createObjectURL(blob);
+    currentAudio = new Audio(audioUrl);
+
     // Mark playing
-    const allAsst = document.querySelectorAll('.msg.assistant');
-    const targetIdx = currentMessages.slice(0, msgIndex + 1).filter(m => m.role === 'assistant').length - 1;
-    if (allAsst[targetIdx]) allAsst[targetIdx].querySelector('.speaker-btn')?.classList.add('playing');
-    currentAudio.play();
+    if (btn) { btn.classList.add('playing'); btn.innerHTML = SPEAKER_PLAYING_SVG; }
+
+    currentAudio.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+      currentAudio = null;
+      if (btn) { btn.classList.remove('playing'); btn.innerHTML = SPEAKER_SVG; }
+    };
+    currentAudio.onerror = (e) => {
+      console.error('[TTS] Audio playback error:', e);
+      URL.revokeObjectURL(audioUrl);
+      currentAudio = null;
+      if (btn) { btn.classList.remove('playing'); btn.innerHTML = SPEAKER_SVG; }
+    };
+    await currentAudio.play();
+    console.log('[TTS] ElevenLabs playback started');
     return;
-  } catch (_) {}
+  } catch (err) {
+    console.warn('[TTS] ElevenLabs failed, falling back to browser TTS:', err.message);
+  }
 
   // Fallback: browser speech synthesis
   if ('speechSynthesis' in window) {
+    console.log('[TTS] Using browser speechSynthesis fallback');
+    if (btn) { btn.classList.add('playing'); btn.innerHTML = SPEAKER_PLAYING_SVG; }
     const utter = new SpeechSynthesisUtterance(text.slice(0, 1000));
     utter.rate = 1.05;
     utter.pitch = 1;
+    utter.onend = () => {
+      if (btn) { btn.classList.remove('playing'); btn.innerHTML = SPEAKER_SVG; }
+    };
     window.speechSynthesis.speak(utter);
+  } else {
+    console.error('[TTS] No speech synthesis available');
   }
 }
 
@@ -579,7 +650,10 @@ let isRecording = false;
 
 function initSpeech() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return;
+  if (!SR) {
+    console.warn('[MIC] SpeechRecognition API not available');
+    return;
+  }
   recognition = new SR();
   recognition.continuous = false;
   recognition.interimResults = false;
@@ -587,6 +661,7 @@ function initSpeech() {
 
   recognition.onresult = (e) => {
     const transcript = e.results[0][0].transcript.trim();
+    console.log('[MIC] Transcript:', transcript);
     stopRecording();
     if (!transcript) return;
 
@@ -601,17 +676,34 @@ function initSpeech() {
       sendMessage(msg);
     }
   };
-  recognition.onerror = () => stopRecording();
-  recognition.onend = () => stopRecording();
+  recognition.onerror = (e) => {
+    console.error('[MIC] Recognition error:', e.error);
+    stopRecording();
+  };
+  recognition.onend = () => {
+    console.log('[MIC] Recognition ended');
+    stopRecording();
+  };
+  console.log('[MIC] SpeechRecognition initialized');
 }
 function toggleMic() {
   if (isRecording) { stopRecording(); return; }
   if (!recognition) initSpeech();
-  if (!recognition) { alert('Speech recognition not supported'); return; }
+  if (!recognition) {
+    console.error('[MIC] Cannot start — SpeechRecognition not supported');
+    alert('Speech recognition is not supported in this browser');
+    return;
+  }
   isRecording = true;
   $micBtn.classList.add('recording');
   $status.textContent = 'Listening...';
-  recognition.start();
+  console.log('[MIC] Starting recognition...');
+  try {
+    recognition.start();
+  } catch (err) {
+    console.error('[MIC] Failed to start:', err);
+    stopRecording();
+  }
 }
 function stopRecording() {
   isRecording = false;
@@ -631,10 +723,11 @@ if (ids.length) {
   renderMessages();
 }
 $input.focus();
+console.log('[DEMIS] Frontend loaded. Mic available:', !!recognition, '| ElevenLabs voice:', ELEVENLABS_VOICE);
 
 // ── SERVICE WORKER ──
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  navigator.serviceWorker.register('/sw.js').catch(e => console.warn('[SW] Registration failed:', e));
 }
 </script>
 </body>
